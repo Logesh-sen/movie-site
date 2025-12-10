@@ -1,5 +1,7 @@
 import { useState } from "react";
-import MovieCatalogue from "./components/MovieCatalogue";
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Favorites from "./pages/Favorites";
 import AppNavbar from "./components/Navbar";
 
 function App() {
@@ -7,8 +9,20 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <AppNavbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-      <MovieCatalogue searchQuery={searchQuery} />
+      <AppNavbar 
+        searchQuery={searchQuery} 
+        setSearchQuery={setSearchQuery}
+      />
+      <Routes>
+        <Route 
+          path="/" 
+          element={<Home searchQuery={searchQuery} />} 
+        />
+        <Route 
+          path="/favorites" 
+          element={<Favorites />} 
+        />
+      </Routes>
     </div>
   );
 }
