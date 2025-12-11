@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Favorites from "./pages/Favorites";
+import Slideshow from "./pages/Slideshow";
 import AppNavbar from "./components/Navbar";
 
 function App() {
@@ -21,6 +22,10 @@ function App() {
         <Route 
           path="/favorites" 
           element={<Favorites />} 
+        />
+        <Route 
+          path="/slideshow" 
+          element={<Slideshow />} 
         />
       </Routes>
     </div>

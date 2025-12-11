@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMovies, searchMovies, fetchMoviesByGenre, type Movie, type MoviesResponse } from "../api/movies";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../components/ui/pagination";
 import GenreFilter from "../components/GenreFilter";
 import MovieGrid from "../components/MovieGrid";
 import MovieDetailsModal from "../components/MovieDetailsModal";
+import MovieSlideshow from "../components/MovieSlideshow";
 import { useFavorites } from "../hooks/useFavorites";
+import { HyperText } from "@/components/ui/hyper-text"
 
 interface HomeProps {
   searchQuery: string;
@@ -24,113 +26,141 @@ export default function Home({ searchQuery }: HomeProps) {
         setDebouncedSearchQuery(searchQuery);
       }
     }, 800); 
-
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  useEffect(() => setPage(1), [debouncedSearchQuery]);
-  useEffect(() => setPage(1), [selectedGenre]);
+  useEffect(() => setPage(1), [debouncedSearchQuery, selectedGenre]);
 
-  const { data, isPending, isError, isFetching } = useQuery<MoviesResponse>({
-    queryKey: ["movies", { page, searchQuery: debouncedSearchQuery, genre: selectedGenre }],
+  const { data, isPending, isError } = useQuery<MoviesResponse>({
+    queryKey: ["movies", page, debouncedSearchQuery, selectedGenre],
     queryFn: () => {
-      if (debouncedSearchQuery.trim().length >= 2) {
-        return searchMovies(debouncedSearchQuery.trim(), page);
-      }
-      
-      if (selectedGenre > 0) {
-        return fetchMoviesByGenre(selectedGenre, page);
-      }
-      
+      if (debouncedSearchQuery.trim().length >= 2) return searchMovies(debouncedSearchQuery.trim(), page);
+      if (selectedGenre > 0) return fetchMoviesByGenre(selectedGenre, page);
       return fetchMovies(page);
     },
     placeholderData: (previousData) => previousData,
     staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
   });
 
-  const CenteredMessage = ({ children, error }: { children: React.ReactNode; error?: boolean }) => (
-    <div className="flex justify-center items-center min-h-screen bg-background text-foreground">
-      <p className={`text-lg ${error ? "text-destructive" : ""}`}>{children}</p>
-    </div>
-  );
+  if (isPending) return <div className="flex justify-center items-center min-h-screen"><p className="text-lg">Loading movies…</p></div>;
+  if (isError) return <div className="flex justify-center items-center min-h-screen"><p className="text-lg text-destructive">Error fetching movies.</p></div>;
 
-  if (isPending) return <CenteredMessage>Loading movies…</CenteredMessage>;
-  if (isError) return <CenteredMessage error>Error fetching movies.</CenteredMessage>;
-
-  const displayedMovies = data?.results || [];
+  const allMovies = data?.results || [];
+  const movies = allMovies.slice(0, 9);
   const totalPages = data?.total_pages || 1;
 
-  if (debouncedSearchQuery.trim().length >= 2 && displayedMovies.length === 0 && !isPending) {
+  if (debouncedSearchQuery.trim().length >= 2 && movies.length === 0) {
     return (
-      <div className="min-h-screen bg-background text-foreground py-6 sm:py-8 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-1xl sm:text-2xl md:text-3xl font-bold mb-6 sm:mb-8 text-center pb-3 sm:pb-4">
-            Search Results for "{debouncedSearchQuery}"
-          </h1>
-          <div className="flex justify-center items-center min-h-[400px]">
-            <div className="text-center">
-              <p className="text-lg text-muted-foreground mb-2">No movies found</p>
-            </div>
-          </div>
+      <div className="min-h-screen py-6 px-4">
+        <div className="max-w-7xl mx-auto flex justify-center items-center min-h-[400px]">
+          <p className="text-lg text-muted-foreground">No movies found</p>
         </div>
       </div>
     );
   }
 
-  const handlePageClick = (e: React.MouseEvent, newPage: number) => {
-    e.preventDefault();
-    setPage(newPage);
-  };
-
   return (
-    <div className="min-h-screen bg-background text-foreground py-6 sm:py-8 px-4 sm:px-6">
+    <div className="min-h-screen py-6 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6 sm:mb-8 pb-3 sm:pb-4">
-          <h1 className="text-1xl sm:text-2xl md:text-3xl font-bold">
-            {debouncedSearchQuery.trim() 
-              ? `Search Results for "${debouncedSearchQuery}"` 
-              : "Popular Movies"
-            }
-          </h1>
+        {!debouncedSearchQuery.trim() && movies.length > 0 && (
+          <div className="mb-8">
+            <MovieSlideshow movies={movies.slice(0, 5)}/>
+          </div>
+        )}
 
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold">
+            <HyperText>
+              {debouncedSearchQuery.trim() ? `Result: "${debouncedSearchQuery}"` : "Popular Movies"}
+            </HyperText>
+          </h2>
           {!debouncedSearchQuery.trim() && (
-            <GenreFilter 
-              selectedGenre={selectedGenre}
-              onGenreChange={setSelectedGenre}
-            />
+            <GenreFilter selectedGenre={selectedGenre} onGenreChange={setSelectedGenre} />
           )}
         </div>
 
-        <MovieGrid
-          movies={displayedMovies}
-          favorites={favorites}
-          onToggleFavorite={toggleFavorite}
-          onMovieClick={setSelectedMovie}
-        />
+        <MovieGrid movies={movies} favorites={favorites} onToggleFavorite={toggleFavorite} onMovieClick={setSelectedMovie} />
 
-        <Pagination className="mt-8">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" onClick={(e) => page > 1 && handlePageClick(e, page - 1)} className={page === 1 ? "pointer-events-none opacity-50" : ""} />
-            </PaginationItem>
-            {[...Array(Math.min(5, totalPages || 1))].map((_, i) => (
-              <PaginationItem key={i + 1}>
-                <PaginationLink href="#" onClick={(e) => handlePageClick(e, i + 1)} isActive={page === i + 1}>{i + 1}</PaginationLink>
+        {totalPages > 1 && (
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  href="#" 
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    if (page > 1) setPage(page - 1); 
+                  }}
+                  className={page <= 1 ? 'pointer-events-none opacity-50' : ''}
+                />
               </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext href="#" onClick={(e) => page < totalPages && handlePageClick(e, page + 1)} className={page === totalPages ? "pointer-events-none opacity-50" : ""} />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+              
+              <PaginationItem>
+                <PaginationLink 
+                  href="#" 
+                  onClick={(e) => { e.preventDefault(); setPage(1); }} 
+                  isActive={page === 1}
+                >
+                  1
+                </PaginationLink>
+              </PaginationItem>
 
-        <MovieDetailsModal
-          movie={selectedMovie}
-          isOpen={!!selectedMovie}
-          onClose={() => setSelectedMovie(null)}
-        />
-        {isFetching && <p className="text-center mt-4 text-muted-foreground">Loading…</p>}
+              {page > 3 && totalPages > 5 && (
+                <PaginationItem>
+                  <span className="px-3 py-2">...</span>
+                </PaginationItem>
+              )}
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(pageNum => {
+                  if (pageNum === 1 || pageNum === totalPages) return false;
+                  return Math.abs(pageNum - page) <= 1;
+                })
+                .map(pageNum => (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); setPage(pageNum); }} 
+                      isActive={page === pageNum}
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+              {page < totalPages - 2 && totalPages > 5 && (
+                <PaginationItem>
+                  <span className="px-3 py-2">...</span>
+                </PaginationItem>
+              )}
+
+              {totalPages > 1 && (
+                <PaginationItem>
+                  <PaginationLink 
+                    href="#" 
+                    onClick={(e) => { e.preventDefault(); setPage(totalPages); }} 
+                    isActive={page === totalPages}
+                  >
+                    {totalPages}
+                  </PaginationLink>
+                </PaginationItem>
+              )}
+
+              <PaginationItem>
+                <PaginationNext 
+                  href="#" 
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    if (page < totalPages) setPage(page + 1); 
+                  }}
+                  className={page >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
+
+        <MovieDetailsModal movie={selectedMovie} isOpen={!!selectedMovie} onClose={() => setSelectedMovie(null)} />
       </div>
     </div>
   );

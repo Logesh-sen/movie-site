@@ -2,11 +2,9 @@ import * as React from "react"
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
-  MoreHorizontalIcon,
 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { cn } from "../../lib/utils"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
@@ -27,7 +25,7 @@ function PaginationContent({
   return (
     <ul
       data-slot="pagination-content"
-      className={cn("flex flex-row items-center gap-1", className)}
+      className={cn("flex flex-row items-center gap-2", className)}
       {...props}
     />
   )
@@ -39,13 +37,11 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 
 type PaginationLinkProps = {
   isActive?: boolean
-} & Pick<React.ComponentProps<typeof Button>, "size"> &
-  React.ComponentProps<"a">
+} & React.ComponentProps<"a">
 
 function PaginationLink({
   className,
   isActive,
-  size = "icon",
   ...props
 }: PaginationLinkProps) {
   return (
@@ -54,10 +50,10 @@ function PaginationLink({
       data-slot="pagination-link"
       data-active={isActive}
       className={cn(
-        buttonVariants({
-          variant: isActive ? "outline" : "ghost",
-          size,
-        }),
+        "flex h-10 w-12 items-center justify-center rounded-lg text-sm font-medium transition-all border-2 border-border",
+        isActive 
+          ? "bg-primary text-primary-foreground shadow-shadow-color" 
+          : "bg-background text-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-shadow-color",
         className
       )}
       {...props}
@@ -70,15 +66,20 @@ function PaginationPrevious({
   ...props
 }: React.ComponentProps<typeof PaginationLink>) {
   return (
-    <PaginationLink
+    <a
       aria-label="Go to previous page"
-      size="default"
-      className={cn("gap-1 px-2.5 sm:pl-2.5", className)}
+      className={cn(
+        "flex h-10 items-center justify-center gap-2 px-4 rounded-lg text-sm font-medium transition-all border-2 border-border",
+        "bg-background text-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-shadow-color",
+        className
+      )}
       {...props}
     >
-      <ChevronLeftIcon />
-      <span className="hidden sm:block">Previous</span>
-    </PaginationLink>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+</svg>
+      
+    </a>
   )
 }
 
@@ -87,15 +88,20 @@ function PaginationNext({
   ...props
 }: React.ComponentProps<typeof PaginationLink>) {
   return (
-    <PaginationLink
+    <a
       aria-label="Go to next page"
-      size="default"
-      className={cn("gap-1 px-2.5 sm:pr-2.5", className)}
+      className={cn(
+        "flex h-10 items-center justify-center gap-2 px-4 rounded-lg text-sm font-medium transition-all border-2 border-border",
+        "bg-background text-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-shadow-color",
+        className
+      )}
       {...props}
     >
-      <span className="hidden sm:block">Next</span>
-      <ChevronRightIcon />
-    </PaginationLink>
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-right" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
+</svg>
+    </a>
   )
 }
 
@@ -107,10 +113,13 @@ function PaginationEllipsis({
     <span
       aria-hidden
       data-slot="pagination-ellipsis"
-      className={cn("flex size-9 items-center justify-center", className)}
+      className={cn(
+        "flex h-10 w-10 items-center justify-center text-muted-foreground",
+        className
+      )}
       {...props}
     >
-      <MoreHorizontalIcon className="size-4" />
+      <span className="text-lg font-bold">...</span>
       <span className="sr-only">More pages</span>
     </span>
   )
