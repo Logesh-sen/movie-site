@@ -28,7 +28,7 @@ export default function AdvancedMovieSlideshow({
   const [isMuted, setIsMuted] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const slideshowRef = useRef<HTMLDivElement>(null);
-  const controlsTimeoutRef = useRef<number>();
+  const controlsTimeoutRef = useRef<number | undefined>(undefined);
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => 

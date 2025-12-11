@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getMovieDetails, type Movie } from "../api/movies";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Play, ExternalLink } from "lucide-react";
+import { Play } from "lucide-react";
 
 interface MovieDetailsModalProps {
   movie: Movie | null;
