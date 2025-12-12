@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight, Play, Pause, Heart, Maximize2, Volume2, VolumeX } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Pause, Heart, Maximize2 } from "lucide-react";
 import { type Movie } from "../api/movies";
 import { Button } from "@/components/ui/button";
 
@@ -25,7 +25,6 @@ export default function AdvancedMovieSlideshow({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const slideshowRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<number | undefined>(undefined);
@@ -66,20 +65,16 @@ export default function AdvancedMovieSlideshow({
     }
   };
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
-
   const handleMouseMove = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
       window.clearTimeout(controlsTimeoutRef.current);
     }
-    controlsTimeoutRef.current = window.setTimeout(() => {
-      if (isFullscreen) {
+    if (isFullscreen) {
+      controlsTimeoutRef.current = window.setTimeout(() => {
         setShowControls(false);
-      }
-    }, 3000);
+      }, 3000);
+    }
   };
 
   useEffect(() => {
@@ -111,10 +106,6 @@ export default function AdvancedMovieSlideshow({
           e.preventDefault();
           togglePlayPause();
           break;
-        case 'f':
-        case 'F':
-          toggleFullscreen();
-          break;
         case 'Escape':
           if (isFullscreen) {
             document.exitFullscreen();
@@ -144,11 +135,10 @@ export default function AdvancedMovieSlideshow({
   return (
     <div 
       ref={slideshowRef}
-      className={`relative w-full rounded-lg overflow-hidden group ${
+      className={`relative w-full rounded-lg overflow-hidden ${
         isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'h-96 md:h-[600px]'
       }`}
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => !isFullscreen && setShowControls(true)}
     >
       <div className="relative w-full h-full">
         {currentMovie.backdrop_path ? (
@@ -166,7 +156,7 @@ export default function AdvancedMovieSlideshow({
           </div>
         )}
         
-        <div className="slideshow-overlay absolute inset-0" />
+
         
         <div className={`absolute bottom-0 left-0 right-0 p-6 text-white transition-opacity duration-300 ${
           showControls || !isFullscreen ? 'opacity-100' : 'opacity-0'
@@ -203,7 +193,7 @@ export default function AdvancedMovieSlideshow({
           <Button
             variant="ghost"
             size="icon"
-            className={`slideshow-control absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white transition-all duration-300 ${
+            className={`absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white transition-all duration-300 ${
               showControls || !isFullscreen ? 'opacity-100' : 'opacity-0'
             }`}
             onClick={prevSlide}
@@ -214,7 +204,7 @@ export default function AdvancedMovieSlideshow({
           <Button
             variant="ghost"
             size="icon"
-            className={`slideshow-control absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white transition-all duration-300 ${
+            className={`absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white transition-all duration-300 ${
               showControls || !isFullscreen ? 'opacity-100' : 'opacity-0'
             }`}
             onClick={nextSlide}
@@ -231,27 +221,18 @@ export default function AdvancedMovieSlideshow({
           <Button
             variant="ghost"
             size="icon"
-            className="slideshow-control bg-black/50 hover:bg-black/70 text-white"
+            className="bg-black/50 hover:bg-black/70 text-white"
             onClick={togglePlayPause}
           >
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </Button>
         )}
         
-        <Button
-          variant="ghost"
-          size="icon"
-          className="slideshow-control bg-black/50 hover:bg-black/70 text-white"
-          onClick={toggleMute}
-        >
-          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-        </Button>
-        
         {enableFullscreen && (
           <Button
             variant="ghost"
             size="icon"
-            className="slideshow-control bg-black/50 hover:bg-black/70 text-white"
+            className="bg-black/50 hover:bg-black/70 text-white"
             onClick={toggleFullscreen}
           >
             <Maximize2 className="w-5 h-5" />
@@ -262,7 +243,7 @@ export default function AdvancedMovieSlideshow({
           <Button
             variant="ghost"
             size="icon"
-            className="slideshow-control bg-black/50 hover:bg-black/70 text-white"
+            className="bg-black/50 hover:bg-black/70 text-white"
             onClick={(e) => onToggleFavorite(currentMovie.id, e)}
           >
             <Heart 
@@ -285,7 +266,7 @@ export default function AdvancedMovieSlideshow({
           {movies.map((_, index) => (
             <button
               key={index}
-              className={`slideshow-indicator w-3 h-3 rounded-full transition-all duration-300 ${
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 index === currentIndex 
                   ? 'bg-white scale-125' 
                   : 'bg-white/50 hover:bg-white/75'
@@ -297,13 +278,13 @@ export default function AdvancedMovieSlideshow({
       )}
 
       {showThumbnails && movies.length > 1 && !isFullscreen && (
-        <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/50 rounded-lg transition-opacity duration-300 ${
+        <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/50 rounded-lg transition-opacity duration-300 max-w-full overflow-x-auto ${
           showControls ? 'opacity-100' : 'opacity-0'
         }`}>
-          {movies.slice(0, 7).map((movie, index) => (
+          {movies.map((movie, index) => (
             <button
               key={movie.id}
-              className={`relative w-16 h-10 rounded overflow-hidden transition-all duration-300 ${
+              className={`relative w-16 h-10 rounded overflow-hidden transition-all duration-300 flex-shrink-0 ${
                 index === currentIndex 
                   ? 'ring-2 ring-white scale-110' 
                   : 'hover:scale-105 opacity-70 hover:opacity-100'
@@ -323,11 +304,6 @@ export default function AdvancedMovieSlideshow({
               )}
             </button>
           ))}
-          {movies.length > 7 && (
-            <div className="flex items-center px-2 text-white text-sm">
-              +{movies.length - 7}
-            </div>
-          )}
         </div>
       )}
 
@@ -343,7 +319,7 @@ export default function AdvancedMovieSlideshow({
         <div className={`absolute top-4 left-4 text-white text-sm bg-black/50 p-2 rounded transition-opacity duration-300 ${
           showControls ? 'opacity-100' : 'opacity-0'
         }`}>
-          <div>← → Navigate | Space Play/Pause | F Fullscreen | Esc Exit</div>
+          <div>← → Navigate | Space Play/Pause | Esc Exit</div>
         </div>
       )}
     </div>
